@@ -1,0 +1,40 @@
+name: Update Cell Metabolism RSS
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-rss:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download RSS
+        run: |
+          curl -L --fail --retry 3 --user-agent "Mozilla/5.0" \
+            "http://www.cell.com/cell-metabolism/inpress.rss" \
+            -o cell-metabolism.xml
+
+      - name: Validate downloaded file
+        run: |
+          test -s cell-metabolism.xml
+          grep -Eq '<rss|<feed' cell-metabolism.xml
+          head -n 10 cell-metabolism.xml
+
+      - name: Commit updated RSS
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cell-metabolism.xml
+          if git diff --cached --quiet; then
+            echo "RSS has not changed."
+          else
+            git commit -m "Update Cell Metabolism RSS"
+            git push
+          fi
