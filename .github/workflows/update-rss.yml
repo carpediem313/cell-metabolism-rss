@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: "17 * * * *"
   workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/update-rss.yml"
 
 permissions:
   contents: write
@@ -17,14 +20,14 @@ jobs:
 
       - name: Download RSS
         run: |
-          curl -L --fail --retry 3 --user-agent "Mozilla/5.0" \
-            "http://www.cell.com/cell-metabolism/inpress.rss" \
+          curl -L --fail --retry 3 \
+            "https://rss.sciencedirect.com/publication/science/15504131" \
             -o cell-metabolism.xml
 
       - name: Validate downloaded file
         run: |
           test -s cell-metabolism.xml
-          grep -Eq '<rss|<feed' cell-metabolism.xml
+          grep -Eq '<rss|<rdf:RDF|<feed' cell-metabolism.xml
           head -n 10 cell-metabolism.xml
 
       - name: Commit updated RSS
